@@ -1,37 +1,49 @@
-
+use std::env;
 use crossterm::{
     event::{self, Event, KeyCode},
-    terminal,
+    terminal, execute,
+    style::Print
 };
+use std::io::{self, Write};
 use std::time::Instant;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Sample text to type
-    let sample_text = "The quick brown fox jumps over the lazy dog.";
+    // User input part
+    println!("Enter your custom text for the typing test:");
+    
+    let mut sample_text = String::new();
+    io::stdin().read_line(&mut sample_text)?;
+    sample_text = sample_text.trim().to_string();  // Remove trailing newline
+    println!("\nType this: {}", sample_text);
 
-    println!("Type this: {}", sample_text);
-    println!("Press 'Esc' to quit or 'Enter' to finish.");
-
-    terminal::enable_raw_mode()?; // Disable line buffering
-
-    let start_time = Instant::now();
+    terminal::enable_raw_mode()?;
+    let mut stdout = io::stdout();
     let mut typed_text = String::new();
+    let start_time = Instant::now();
 
     loop {
         if let Event::Key(event) = event::read()? {
             match event.code {
-                KeyCode::Esc => break, // Quit early
-                KeyCode::Enter => break, // Finish typing
+                KeyCode::Esc => break,
+                KeyCode::Enter => break,
                 KeyCode::Char(c) => {
-                    print!("{}", c); // Echo typed char
+                    // Echo the typed character
+                    execute!(stdout, Print(c))?;
                     typed_text.push(c);
+                }
+                KeyCode::Backspace => {
+                    // Handle backspace (optional)
+                    if !typed_text.is_empty() {
+                        typed_text.pop();
+                        execute!(stdout, Print("\x08 \x08"))?; // Erase last char
+                    }
                 }
                 _ => {}
             }
         }
     }
 
-    terminal::disable_raw_mode()?; // Reset terminal
+    terminal::disable_raw_mode()?;
 
     let elapsed = start_time.elapsed().as_secs_f64();
     let wpm = calculate_wpm(&typed_text, elapsed);
@@ -57,4 +69,3 @@ fn calculate_accuracy(expected: &str, typed: &str) -> f64 {
         .count();
     correct as f64 / expected.len() as f64
 }
-
