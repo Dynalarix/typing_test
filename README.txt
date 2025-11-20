@@ -15,3 +15,5 @@ rustc --version
 
 to uninstall run: 
 rustup self uninstall
+
+to compile 'rustup' then 'cargo build'
