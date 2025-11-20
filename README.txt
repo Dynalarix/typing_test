@@ -15,4 +15,3 @@ rustc --version
 
 to uninstall run: 
 rustup self uninstall
-
